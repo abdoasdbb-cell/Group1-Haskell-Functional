@@ -1,20 +1,20 @@
 module Main where
 
 import Data.List (intercalate)
+import Data.Maybe (fromMaybe)
 
 -- Define a type alias for a Grade, making the code easier to read
 type Grade = Float
 
 -- ===============================================
 -- 1. DATA STRUCTURE (Algebraic Data Type - ADT)
---    This is the functional equivalent of a 'struct' in C.
 -- ===============================================
 
 data Student = Student
   { studentName  :: String
   , studentAge   :: Int
   , studentGrade :: Grade
-  } deriving (Show)
+  } deriving (Show, Eq) -- Added 'Eq' to allow comparison (needed for Delete)
 
 -- The Roster is a simple list of Students
 type Roster = [Student]
@@ -22,15 +22,17 @@ type Roster = [Student]
 
 -- ===============================================
 -- 2. CORE FUNCTIONS (PURE FUNCTIONS)
---    Note: These functions do *not* modify the list. They take an old list
---    and return a brand new list (immutability).
 -- ===============================================
 
--- | Function to add a student to the roster.
--- It takes a Student and a Roster, and returns a new Roster.
+-- | Function to add a student to the roster (returns a *new* roster).
 addStudent :: Student -> Roster -> Roster
 addStudent newStudent currentRoster = newStudent : currentRoster
--- The ':' operator (cons) efficiently adds an element to the front of a list.
+
+-- | Function to remove a student by name (uses recursion/filter, returns a *new* roster).
+deleteStudent :: String -> Roster -> Roster
+deleteStudent nameToDelete currentRoster = filter (\s -> studentName s /= nameToDelete) currentRoster
+-- 'filter' is a pure function that returns a new list containing only the elements
+-- for which the condition (studentName /= nameToDelete) is True.
 
 -- | Function to convert a Student into a formatted String for display.
 formatStudent :: Student -> String
@@ -52,31 +54,71 @@ displayRoster roster = header ++ content
 
 
 -- ===============================================
--- 3. MAIN IO LOOP (THE IMPURE PART)
---    Haskell separates pure logic from side-effects (like printing/input).
+-- 3. STATISTICS FUNCTIONS (PURE FUNCTIONS)
+-- ===============================================
+
+-- | Function to calculate the average grade of the roster.
+calculateAverageGrade :: Roster -> Grade
+calculateAverageGrade [] = 0.0 -- Handles the empty list case
+calculateAverageGrade roster = totalGrade / count
+  where
+    -- 'map' pulls all grades; 'sum' aggregates them
+    grades = map studentGrade roster
+    totalGrade = sum grades
+    -- 'fromIntegral' converts the integer length to a float for division
+    count = fromIntegral (length grades)
+
+-- | Function to calculate the average age of the roster.
+calculateAverageAge :: Roster -> Float
+calculateAverageAge [] = 0.0
+calculateAverageAge roster = totalAge / count
+  where
+    ages = map studentAge roster
+    totalAge = fromIntegral (sum ages)
+    count = fromIntegral (length ages)
+
+
+-- ===============================================
+-- 4. MAIN IO LOOP (THE IMPURE PART - DEMONSTRATION)
 -- ===============================================
 
 main :: IO ()
 main = do
   putStrLn "--- Haskell Student Manager (Functional Paradigm) ---"
 
-  -- Initialize the roster (immutable data)
   let initialRoster :: Roster
       initialRoster = []
 
-  putStrLn "\n--- Initial Roster ---"
-  putStrLn (displayRoster initialRoster)
+  -- 1. Create three new Student records (immutable data)
+  let alice   = Student {studentName = "Alice", studentAge = 20, studentGrade = 4.5}
+  let bob     = Student {studentName = "Bob", studentAge = 19, studentGrade = 3.0}
+  let charlie = Student {studentName = "Charlie", studentAge = 21, studentGrade = 4.0}
 
-  -- Create two new Student records
-  let alice = Student {studentName = "Alice", studentAge = 20, studentGrade = 4.5}
-  let bob   = Student {studentName = "Bob", studentAge = 19, studentGrade = 3.0}
-
-  -- Add Alice (results in a new roster: rosterA)
+  -- 2. Build the final roster through sequential, immutable transformations:
   let rosterA = addStudent alice initialRoster
-  putStrLn "\n--- Roster after adding Alice ---"
-  putStrLn (displayRoster rosterA)
+  let rosterB = addStudent bob rosterA
+  let rosterC = addStudent charlie rosterB
 
-  -- Add Bob (results in a new roster: finalRoster)
-  let finalRoster = addStudent bob rosterA
-  putStrLn "\n--- Roster after adding Bob ---"
-  putStrLn (displayRoster finalRoster)
+  putStrLn "\n--- Current Roster (3 Students) ---"
+  putStrLn (displayRoster rosterC)
+
+  -- 3. Demonstrate statistics
+  putStrLn "\n--- Statistics Calculation ---"
+  let avgG = calculateAverageGrade rosterC
+  let avgA = calculateAverageAge rosterC
+  putStrLn $ "Total Students: " ++ show (length rosterC)
+  putStrLn $ "Average Grade: " ++ show avgG
+  putStrLn $ "Average Age: " ++ show avgA ++ " years"
+  putStrLn "----------------------------"
+
+  -- 4. Demonstrate deletion (creates a NEW roster: rosterD)
+  putStrLn "\n--- Demonstrating Deletion (Removing Bob) ---"
+  let rosterD = deleteStudent "Bob" rosterC
+  putStrLn "Bob has been removed (functionally)."
+
+  putStrLn "\n--- Roster After Deletion ---"
+  putStrLn (displayRoster rosterD)
+  
+  -- Final check of statistics on the smaller roster
+  putStrLn "\n--- Statistics Check on Roster D (Alice & Charlie) ---"
+  putStrLn $ "New Total Students: " ++ show (length rosterD)
