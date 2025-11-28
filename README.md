@@ -3,14 +3,10 @@
 ## Project Overview
 This is **Project 2** for Group 1, designed to demonstrate the **Functional Programming Paradigm** using the Haskell language.
 
-Unlike the imperative C project, this application focuses on **immutability** (data structures are never changed) and **pure functions** (functions rely only on their inputs and produce no side effects). State changes, like adding a student, are performed by creating and returning a *new* data structure.
-
-The project currently implements the fundamental data structures and the functional equivalent of adding records to the roster.
-
-## Core Functional Concepts
-* **Algebraic Data Types (ADTs):** Used to define the `Student` record, similar to `structs` in C.
-* **Pure Functions:** All logic (like `addStudent` and `displayRoster`) is side-effect free, meaning they only perform calculations and never handle I/O (printing, saving, input).
-* **Recursion & List Comprehension:** Future functions (like calculating statistics) will be implemented using recursive logic or built-in list functions (`map`, `filter`, `foldr`) instead of traditional loops.
+The application manages basic student records (`Name`, `Age`, `Grade`) using purely functional concepts:
+* **Immutability:** Data structures (`Roster`) are never changed. Operations like adding or deleting students result in a **new** list being created.
+* **Pure Functions:** All core logic (`addStudent`, `calculateAverageGrade`, `deleteStudent`, `searchStudentsByName`) is side-effect free, ensuring reliability.
+* **List Transformation:** Core features are implemented using higher-order functions like `map`, `filter`, and `sum` instead of imperative loops or mutable variables.
 
 ## Getting Started: Installation & Setup 🛠️
 
@@ -21,7 +17,7 @@ To compile and run this program, you need the **Haskell Platform** installed, wh
     ```bash
     ghc Main.hs
     ```
-3.  **Run:** Execute the compiled file (the executable will be named `Main`):
+3.  **Run:** Execute the compiled file:
     ```bash
     ./Main
     ```
@@ -29,26 +25,47 @@ To compile and run this program, you need the **Haskell Platform** installed, wh
 
 ## Examples of Execution
 
-This demonstration shows how the immutable Roster is updated by creating a new list (`rosterA` and `finalRoster`) at each step.
+The demonstration below shows adding four students, calculating statistics, running a search query, and demonstrating deletion by creating a new, smaller roster.
+
+### Scenario: Full Feature Demonstration
 
 ```bash
 $ ./Main
 --- Haskell Student Manager (Functional Paradigm) ---
 
---- Initial Roster ---
-Roster is empty.
-
---- Roster after adding Alice ---
+--- Full Roster (4 Students) ---
 -----------------------------------
 | Name            | Age | Grade |
 -----------------------------------
+| Alison          | 20 | 3.5 |
+| Charlie         | 21 | 4.0 |
+| Bob             | 19 | 3.0 |
 | Alice           | 20 | 4.5 |
 -----------------------------------
 
---- Roster after adding Bob ---
+--- Demonstrating Search: Query 'ali' ---
+Search uses a case-insensitive, partial match.
+Found 2 student(s):
+
 -----------------------------------
 | Name            | Age | Grade |
 -----------------------------------
-| Bob             | 19 | 3.0 |
+| Alison          | 20 | 3.5 |
+| Alice           | 20 | 4.5 |
+-----------------------------------
+
+--- Demonstrating Deletion (Removing Bob) & Stats ---
+Bob has been removed (functionally, by creating a new list).
+
+New Total Students: 3
+Average Grade (No Bob): 4.0 years
+----------------------------
+
+--- Roster After Deletion ---
+-----------------------------------
+| Name            | Age | Grade |
+-----------------------------------
+| Alison          | 20 | 3.5 |
+| Charlie         | 21 | 4.0 |
 | Alice           | 20 | 4.5 |
 -----------------------------------
