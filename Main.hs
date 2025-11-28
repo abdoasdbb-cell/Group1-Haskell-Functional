@@ -1,7 +1,7 @@
 module Main where
 
 import Data.List (intercalate)
-import Data.Maybe (fromMaybe)
+import Data.Char (toLower)
 
 -- Define a type alias for a Grade, making the code easier to read
 type Grade = Float
@@ -14,7 +14,7 @@ data Student = Student
   { studentName  :: String
   , studentAge   :: Int
   , studentGrade :: Grade
-  } deriving (Show, Eq) -- Added 'Eq' to allow comparison (needed for Delete)
+  } deriving (Show, Eq)
 
 -- The Roster is a simple list of Students
 type Roster = [Student]
@@ -28,11 +28,9 @@ type Roster = [Student]
 addStudent :: Student -> Roster -> Roster
 addStudent newStudent currentRoster = newStudent : currentRoster
 
--- | Function to remove a student by name (uses recursion/filter, returns a *new* roster).
+-- | Function to remove a student by name (returns a *new* roster).
 deleteStudent :: String -> Roster -> Roster
 deleteStudent nameToDelete currentRoster = filter (\s -> studentName s /= nameToDelete) currentRoster
--- 'filter' is a pure function that returns a new list containing only the elements
--- for which the condition (studentName /= nameToDelete) is True.
 
 -- | Function to convert a Student into a formatted String for display.
 formatStudent :: Student -> String
@@ -48,24 +46,32 @@ displayRoster roster = header ++ content
   where
     headerLine = replicate 35 '-'
     header = "\n" ++ headerLine ++ "\n" ++ "| Name            | Age | Grade |\n" ++ headerLine
-    -- map applies 'formatStudent' to every Student in the list
-    -- intercalate joins the resulting strings with a newline character
     content = intercalate "\n" (map formatStudent roster) ++ "\n" ++ headerLine
 
+-- ===============================================
+-- 3. SEARCH/FILTER FUNCTION (PURE FUNCTION)
+-- ===============================================
+
+-- | Searches the roster by name (case-insensitive and partial match).
+-- Returns a *new* list containing only matching students.
+searchStudentsByName :: String -> Roster -> Roster
+searchStudentsByName query roster = filter matchesQuery roster
+  where
+    -- Convert query and student name to lowercase for case-insensitive matching
+    lowerQuery = map toLower query
+    matchesQuery student = lowerQuery `elem` map toLower (studentName student)
 
 -- ===============================================
--- 3. STATISTICS FUNCTIONS (PURE FUNCTIONS)
+-- 4. STATISTICS FUNCTIONS (PURE FUNCTIONS)
 -- ===============================================
 
 -- | Function to calculate the average grade of the roster.
 calculateAverageGrade :: Roster -> Grade
-calculateAverageGrade [] = 0.0 -- Handles the empty list case
+calculateAverageGrade [] = 0.0
 calculateAverageGrade roster = totalGrade / count
   where
-    -- 'map' pulls all grades; 'sum' aggregates them
     grades = map studentGrade roster
     totalGrade = sum grades
-    -- 'fromIntegral' converts the integer length to a float for division
     count = fromIntegral (length grades)
 
 -- | Function to calculate the average age of the roster.
@@ -79,7 +85,7 @@ calculateAverageAge roster = totalAge / count
 
 
 -- ===============================================
--- 4. MAIN IO LOOP (THE IMPURE PART - DEMONSTRATION)
+-- 5. MAIN IO LOOP (THE IMPURE PART - FINAL DEMONSTRATION)
 -- ===============================================
 
 main :: IO ()
@@ -89,36 +95,33 @@ main = do
   let initialRoster :: Roster
       initialRoster = []
 
-  -- 1. Create three new Student records (immutable data)
+  -- 1. Create four new Student records
   let alice   = Student {studentName = "Alice", studentAge = 20, studentGrade = 4.5}
   let bob     = Student {studentName = "Bob", studentAge = 19, studentGrade = 3.0}
   let charlie = Student {studentName = "Charlie", studentAge = 21, studentGrade = 4.0}
+  let alison  = Student {studentName = "Alison", studentAge = 20, studentGrade = 3.5}
 
-  -- 2. Build the final roster through sequential, immutable transformations:
+  -- 2. Build the final roster
   let rosterA = addStudent alice initialRoster
   let rosterB = addStudent bob rosterA
   let rosterC = addStudent charlie rosterB
+  let finalRoster = addStudent alison rosterC
 
-  putStrLn "\n--- Current Roster (3 Students) ---"
-  putStrLn (displayRoster rosterC)
+  putStrLn "\n--- Full Roster (4 Students) ---"
+  putStrLn (displayRoster finalRoster)
 
-  -- 3. Demonstrate statistics
-  putStrLn "\n--- Statistics Calculation ---"
-  let avgG = calculateAverageGrade rosterC
-  let avgA = calculateAverageAge rosterC
-  putStrLn $ "Total Students: " ++ show (length rosterC)
-  putStrLn $ "Average Grade: " ++ show avgG
-  putStrLn $ "Average Age: " ++ show avgA ++ " years"
-  putStrLn "----------------------------"
+  -- 3. Demonstrate the new search function
+  let searchQ = "ali"
+  let searchResults = searchStudentsByName searchQ finalRoster
 
-  -- 4. Demonstrate deletion (creates a NEW roster: rosterD)
-  putStrLn "\n--- Demonstrating Deletion (Removing Bob) ---"
-  let rosterD = deleteStudent "Bob" rosterC
-  putStrLn "Bob has been removed (functionally)."
-
-  putStrLn "\n--- Roster After Deletion ---"
-  putStrLn (displayRoster rosterD)
+  putStrLn $ "\n--- Demonstrating Search: Query '" ++ searchQ ++ "' ---"
+  putStrLn $ "Found " ++ show (length searchResults) ++ " student(s):"
+  putStrLn (displayRoster searchResults)
   
-  -- Final check of statistics on the smaller roster
-  putStrLn "\n--- Statistics Check on Roster D (Alice & Charlie) ---"
-  putStrLn $ "New Total Students: " ++ show (length rosterD)
+  -- 4. Demonstrate Deletion and Stats
+  putStrLn "\n--- Demonstrating Deletion (Removing Bob) & Stats ---"
+  let rosterWithoutBob = deleteStudent "Bob" finalRoster
+  
+  putStrLn $ "New Total Students: " ++ show (length rosterWithoutBob)
+  putStrLn $ "Average Grade (No Bob): " ++ show (calculateAverageGrade rosterWithoutBob)
+  putStrLn "----------------------------"
